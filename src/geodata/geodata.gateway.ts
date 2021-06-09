@@ -10,6 +10,8 @@ import { Server } from 'socket.io';
 import { GeoDataService } from './geodata.service';
 import { trucks } from '../data/trucks';
 import { geoDataTrucks } from '../data/tracks';
+import { TruckSearchDto } from './dto/request/truck-search.dto';
+import { TruckDto } from './dto/track.dto';
 
 @WebSocketGateway()
 export class GeoDataGateway implements OnGatewayInit {
@@ -25,7 +27,7 @@ export class GeoDataGateway implements OnGatewayInit {
   }
 
   @SubscribeMessage('trackTravel')
-  async trackTravel(client: Socket, payload: any): Promise<void> {
+  async trackTravel(client: Socket, payload: TruckSearchDto): Promise<void> {
     this.logger.log(`Trying to retrive tracks for ${payload.truck}`);
 
     const tracks = geoDataTrucks.find(
@@ -33,8 +35,7 @@ export class GeoDataGateway implements OnGatewayInit {
     ).track;
 
     tracks.map((track, index) => {
-      this.logger.log(`Sending track ${track} for truck ${payload.truck}`);
-      this.emitWithDelay(client, index, track);
+      this.emitWithDelay(client, index, track, payload.truck);
     });
   }
 
@@ -42,9 +43,17 @@ export class GeoDataGateway implements OnGatewayInit {
     return this.logger.log('Init done for GeoData Gateway');
   }
 
-  public emitWithDelay(client: Socket, index: number, data: any) {
+  public emitWithDelay(
+    client: Socket,
+    index: number,
+    track: TruckDto,
+    truck: string,
+  ): void {
+    this.logger.log(
+      `Sending track ${JSON.stringify(track)} for truck ${truck}`,
+    );
     setTimeout(function () {
-      client.emit('tracks', data);
+      client.emit('tracks', track);
     }, index * 5000);
   }
 }
