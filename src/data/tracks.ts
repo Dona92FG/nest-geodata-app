@@ -32,4 +32,37 @@ export const geoDataTrucks = [
       },
     ],
   },
+  {
+    id: 'Truck - MB07F',
+    track: [
+      {
+        name: 'Pescara',
+        date: '22/04/2020',
+        time: '8:13',
+        lat: 42.4612,
+        lon: 14.2111,
+      },
+      {
+        name: 'Ancona',
+        date: '22/04/2020',
+        time: '10:17',
+        lat: 43.5991,
+        lon: 13.511,
+      },
+      {
+        name: 'Rimini',
+        date: '22/04/2020',
+        time: '12:22',
+        lat: 44.0693,
+        lon: 12.5566,
+      },
+      {
+        name: 'Modena',
+        date: '22/04/2020',
+        time: '15:58',
+        lat: 44.6568,
+        lon: 10.9202,
+      },
+    ],
+  },
 ];
