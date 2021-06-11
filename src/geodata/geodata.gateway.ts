@@ -74,8 +74,10 @@ export class GeoDataGateway
   ): void {
     const logger = this.logger;
     setTimeout(function () {
-      logger.log(`Sending track ${JSON.stringify(track)} for truck ${truck}`);
-      client.emit('tracks', track);
-    }, index * 5000);
+      if (client.connected === true) {
+        logger.log(`Sending track ${JSON.stringify(track)} for truck ${truck}`);
+        client.emit('tracks', track);
+      }
+    }, index * 3000);
   }
 }
