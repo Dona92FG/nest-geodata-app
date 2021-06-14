@@ -26,6 +26,7 @@ export class GeoDataGateway
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('ChatGateway');
   private clients = new Map<string, connectedClient>();
+  private pendingEmits: NodeJS.Timeout[] = [];
 
   constructor(private readonly getDataService: GeoDataService) {}
 
@@ -57,6 +58,12 @@ export class GeoDataGateway
       (data) => data.id === payload.truck,
     ).track;
 
+    this.pendingEmits.forEach((emit) => {
+      clearTimeout(emit);
+    });
+
+    this.pendingEmits = [];
+
     tracks.map((track, index) => {
       this.emitWithDelay(client, index, track, payload.truck);
     });
@@ -73,11 +80,10 @@ export class GeoDataGateway
     truck: string,
   ): void {
     const logger = this.logger;
-    setTimeout(function () {
-      if (client.connected === true) {
-        logger.log(`Sending track ${JSON.stringify(track)} for truck ${truck}`);
-        client.emit('tracks', track);
-      }
+    const timeout = setTimeout(function () {
+      logger.log(`Sending track ${JSON.stringify(track)} for truck ${truck}`);
+      client.emit('tracks', track);
     }, index * 3000);
+    this.pendingEmits.push(timeout);
   }
 }
