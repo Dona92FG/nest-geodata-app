@@ -26,13 +26,14 @@ export class GeoDataGateway
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('ChatGateway');
   private clients = new Map<string, connectedClient>();
-  private pendingEmits: NodeJS.Timeout[] = [];
+  private clientEmits = new Map<string, NodeJS.Timeout[]>();
 
   constructor(private readonly getDataService: GeoDataService) {}
 
   public handleConnection(client: Socket): void {
     client.emit('connected');
     this.clients.set(client.id, { connected: true });
+    this.clientEmits.set(client.id, []);
     this.logger.log(`Client connected: ${client.id}`);
     this.logger.log(`#clients ${this.clients.size}`);
   }
@@ -40,6 +41,7 @@ export class GeoDataGateway
   public handleDisconnect(client: Socket): void {
     client.emit('disconnected');
     this.clients.delete(client.id);
+    this.clientEmits.delete(client.id);
     this.logger.log(`#clients ${this.clients.size}`);
     return this.logger.log(`Client disconnected: ${client.id}`);
   }
@@ -58,11 +60,11 @@ export class GeoDataGateway
       (data) => data.id === payload.truck,
     ).track;
 
-    this.pendingEmits.forEach((emit) => {
-      clearTimeout(emit);
+    this.clientEmits.get(client.id).forEach((timeout) => {
+      clearTimeout(timeout);
     });
 
-    this.pendingEmits = [];
+    this.clientEmits.set(client.id, []);
 
     tracks.map((track, index) => {
       this.emitWithDelay(client, index, track, payload.truck);
@@ -84,6 +86,6 @@ export class GeoDataGateway
       logger.log(`Sending track ${JSON.stringify(track)} for truck ${truck}`);
       client.emit('tracks', track);
     }, index * 3000);
-    this.pendingEmits.push(timeout);
+    this.clientEmits.get(client.id).push(timeout);
   }
 }
