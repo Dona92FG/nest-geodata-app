@@ -74,6 +74,8 @@ export class GeoDataGateway
       tracks.map((track, index) => {
         this.emitWithDelay(client, index, track, payload.truck);
       });
+
+      this.clientEmits.get(client.id).push(payload.truck);
     }
   }
 
@@ -92,6 +94,5 @@ export class GeoDataGateway
       logger.log(`Sending track ${JSON.stringify(track)} for truck ${truck}`);
       client.emit('tracks', track, truck);
     }, index * 3000);
-    this.clientEmits.get(client.id).push(truck);
   }
 }
