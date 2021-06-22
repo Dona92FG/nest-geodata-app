@@ -65,4 +65,30 @@ export const geoDataTrucks = [
       },
     ],
   },
+  {
+    id: 'Truck - AAB03',
+    track: [
+      {
+        name: 'Bari',
+        date: '12/04/2020',
+        time: '10:15',
+        lat: 41.1187,
+        lon: 16.852,
+      },
+      {
+        name: 'Melfi',
+        date: '12/04/2020',
+        time: '12:15',
+        lat: 40.9975,
+        lon: 15.6522,
+      },
+      {
+        name: 'Salerno',
+        date: '12/04/2020',
+        time: '18:17',
+        lat: 40.6642,
+        lon: 14.8046,
+      },
+    ],
+  },
 ];
