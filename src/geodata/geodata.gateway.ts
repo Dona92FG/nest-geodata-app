@@ -26,7 +26,7 @@ export class GeoDataGateway
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('ChatGateway');
   private clients = new Map<string, connectedClient>();
-  private clientEmits = new Map<string, NodeJS.Timeout[]>();
+  private clientEmits = new Map<string, string[]>();
 
   constructor(private readonly getDataService: GeoDataService) {}
 
@@ -52,23 +52,31 @@ export class GeoDataGateway
     client.emit('trucks', trucks);
   }
 
+  @SubscribeMessage('cleanTruckWork')
+  async cleanTruckWork(client: Socket, payload: TruckSearchDto): Promise<void> {
+    this.logger.log(`Trying to clean emits work for truck ${payload.truck}`);
+    this.clientEmits
+      .get(client.id)
+      .splice(this.clientEmits.get(client.id).indexOf(payload.truck), 1);
+  }
+
   @SubscribeMessage('trackTravel')
   async trackTravel(client: Socket, payload: TruckSearchDto): Promise<void> {
-    this.logger.log(`Trying to retrive tracks for ${payload.truck}`);
+    const truckEmits = this.clientEmits.get(client.id);
 
-    const tracks = geoDataTrucks.find(
-      (data) => data.id === payload.truck,
-    ).track;
+    if (!truckEmits.includes(payload.truck)) {
+      this.logger.log(`Trying to retrive tracks for ${payload.truck}`);
 
-    this.clientEmits.get(client.id).forEach((timeout) => {
-      clearTimeout(timeout);
-    });
+      const tracks = geoDataTrucks.find(
+        (data) => data.id === payload.truck,
+      ).track;
 
-    this.clientEmits.set(client.id, []);
+      tracks.map((track, index) => {
+        this.emitWithDelay(client, index, track, payload.truck);
+      });
 
-    tracks.map((track, index) => {
-      this.emitWithDelay(client, index, track, payload.truck);
-    });
+      this.clientEmits.get(client.id).push(payload.truck);
+    }
   }
 
   public afterInit(server: Server): void {
@@ -82,10 +90,9 @@ export class GeoDataGateway
     truck: string,
   ): void {
     const logger = this.logger;
-    const timeout = setTimeout(function () {
+    setTimeout(function () {
       logger.log(`Sending track ${JSON.stringify(track)} for truck ${truck}`);
-      client.emit('tracks', track);
+      client.emit('tracks', track, truck);
     }, index * 3000);
-    this.clientEmits.get(client.id).push(timeout);
   }
 }
